@@ -39,11 +39,10 @@ class Controller(
 ) {
     @PostMapping(path = ["/api/signup"], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun signup(@RequestBody body: EmailAndPasswordJsonRequest, httpServletRequest: HttpServletRequest): String {
-        val email = body.email!!
         val password = passwordEncoder.encode(body.password)
-        val user = userRepository.save(User(email = email, password = password))
+        val user = userRepository.save(User(email = body.email, password = password))
         // ログイン済とみなす
-        val loginUser = LoginUser(user.id!!, email, user.roles)
+        val loginUser = LoginUser(user.id!!, user.email, user.roles)
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(loginUser, password, loginUser.authorities)
         httpServletRequest.changeSessionId() // session fixation対策

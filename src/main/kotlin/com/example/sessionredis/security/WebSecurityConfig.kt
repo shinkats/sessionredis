@@ -1,5 +1,6 @@
 package com.example.sessionredis.security
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -13,7 +14,8 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true) // for @PreAuthorize, @Secured
 class WebSecurityConfig(
-    private val authenticationProvider: JsonRequestAuthenticationProvider
+    private val jsonRequestAuthenticationProvider: JsonRequestAuthenticationProvider,
+    private val objectMapper: ObjectMapper
 ) : WebSecurityConfigurerAdapter() {
 
     override fun configure(web: WebSecurity) {
@@ -21,12 +23,12 @@ class WebSecurityConfig(
     }
 
     override fun configure(http: HttpSecurity) {
-        val filter = JsonRequestAuthenticationFilter()
-        filter.setRequiresAuthenticationRequestMatcher(AntPathRequestMatcher("/api/login", "POST"))
-        filter.setSessionAuthenticationStrategy(ChangeSessionIdAuthenticationStrategy()) // session fixation対策
-        filter.setAuthenticationSuccessHandler { _, response, _ -> response.status = 200 }
-        filter.setAuthenticationManager(authenticationManagerBean())
-        http.addFilter(filter)
+        val jsonAuthFilter = JsonRequestAuthenticationFilter(objectMapper)
+        jsonAuthFilter.setRequiresAuthenticationRequestMatcher(AntPathRequestMatcher("/api/login", "POST"))
+        jsonAuthFilter.setSessionAuthenticationStrategy(ChangeSessionIdAuthenticationStrategy()) // session fixation対策
+        jsonAuthFilter.setAuthenticationSuccessHandler { _, response, _ -> response.status = 200 }
+        jsonAuthFilter.setAuthenticationManager(authenticationManagerBean())
+        http.addFilter(jsonAuthFilter)
 
         http.logout()
             .logoutUrl("/api/logout")
@@ -35,7 +37,7 @@ class WebSecurityConfig(
     }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
-        auth.authenticationProvider(authenticationProvider)
+        auth.authenticationProvider(jsonRequestAuthenticationProvider)
     }
 
     companion object {
