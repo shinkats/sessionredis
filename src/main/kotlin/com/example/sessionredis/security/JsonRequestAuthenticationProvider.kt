@@ -21,7 +21,7 @@ class JsonRequestAuthenticationProvider(
         if (!passwordEncoder.matches(password, user.password)) {
             throw BadCredentialsException("incorrect password")
         }
-        val loginUser = LoginUser(user.id!!, email, user.roles)
+        val loginUser = LoginUser(user.id!!, user.roles)
         return UsernamePasswordAuthenticationToken(loginUser, password, loginUser.authorities)
     }
 

@@ -42,7 +42,7 @@ class Controller(
         val password = passwordEncoder.encode(body.password)
         val user = userRepository.save(User(email = body.email, password = password))
         // ログイン済とみなす
-        val loginUser = LoginUser(user.id!!, user.email, user.roles)
+        val loginUser = LoginUser(user.id!!, user.roles)
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(loginUser, password, loginUser.authorities)
         httpServletRequest.changeSessionId() // session fixation対策
