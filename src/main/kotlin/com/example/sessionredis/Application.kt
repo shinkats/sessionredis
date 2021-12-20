@@ -14,6 +14,7 @@ import org.springframework.security.access.annotation.Secured
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.csrf.CsrfToken
@@ -42,7 +43,7 @@ class Controller(
         val password = passwordEncoder.encode(body.password)
         val user = userRepository.save(User(email = body.email, password = password))
         // ログイン済とみなす
-        val loginUser = LoginUser(user.id!!, user.roles)
+        val loginUser = LoginUser(user.id!!, user.roles.map { SimpleGrantedAuthority(it) })
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(loginUser, password, loginUser.authorities)
         httpServletRequest.changeSessionId() // session fixation対策
@@ -75,8 +76,12 @@ class Controller(
      * そのため初めてPOST等を実行する前に、このAPIを呼び出してセッションを（なければ）作成しCSRF TOKENを取得する。
      */
     @GetMapping(path = ["/api/csrf-token"], produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun csrfToken(httpServletRequest: HttpServletRequest): String {
-        val csrfToken = httpServletRequest.getAttribute(CsrfToken::class.java.name) as CsrfToken
+    fun csrfToken(csrfToken: CsrfToken): String {
         return """{ "token": "${csrfToken.token}" }"""
     }
+    // CsrfTokenにDIしてくれるため、以下のようなコードは不要
+//    fun csrfToken(httpServletRequest: HttpServletRequest): String {
+//        val csrfToken = httpServletRequest.getAttribute(CsrfToken::class.java.name) as CsrfToken
+//        return """{ "token": "${csrfToken.token}" }"""
+//    }
 }
