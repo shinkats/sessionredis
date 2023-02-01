@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import javax.servlet.http.HttpServletRequest
 
 
 @SpringBootApplication
@@ -39,14 +38,14 @@ class Controller(
     private val passwordEncoder: PasswordEncoder
 ) {
     @PostMapping(path = ["/api/signup"], produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun signup(@RequestBody body: EmailAndPasswordJsonRequest, httpServletRequest: HttpServletRequest): String {
+    fun signup(@RequestBody body: EmailAndPasswordJsonRequest): String {
         val password = passwordEncoder.encode(body.password)
         val user = userRepository.save(User(email = body.email, password = password))
         // ログイン済とみなす
         val loginUser = LoginUser(user.id!!, user.roles.map { SimpleGrantedAuthority(it) })
         SecurityContextHolder.getContext().authentication =
             UsernamePasswordAuthenticationToken(loginUser, password, loginUser.authorities)
-        httpServletRequest.changeSessionId() // session fixation対策
+//        httpServletRequest.changeSessionId() // session fixation対策
         return """{ "id": ${user.id} }"""
     }
 

@@ -25,7 +25,7 @@ class WebSecurityConfig(
     override fun configure(http: HttpSecurity) {
         val jsonAuthFilter = JsonRequestAuthenticationFilter(objectMapper)
         jsonAuthFilter.setRequiresAuthenticationRequestMatcher(AntPathRequestMatcher("/api/login", "POST"))
-        jsonAuthFilter.setSessionAuthenticationStrategy(ChangeSessionIdAuthenticationStrategy()) // session fixation対策
+        jsonAuthFilter.setSessionAuthenticationStrategy(ChangeSessionIdAuthenticationStrategy()) // session fixation対策. これがないとsignup時にhttpServletRequest.changeSessionId()が必要
         jsonAuthFilter.setAuthenticationSuccessHandler { _, response, _ -> response.status = 200 }
         jsonAuthFilter.setAuthenticationManager(authenticationManagerBean())
         http.addFilter(jsonAuthFilter)
